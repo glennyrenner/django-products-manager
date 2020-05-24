@@ -1,0 +1,128 @@
+{% extends 'main/base.html' %}
+{% block content %}
+{% load static %}
+<!-- Scripts -->
+<script>
+    $(document).ready(function () {
+        var entries;
+        var selected;
+
+        var dangerYear = new Date().getFullYear();
+        var dangerMonth = new Date().getMonth() + 3;
+
+        $('#entries-table').DataTable({
+            'createdRow': function (row, data, dataIndex) {
+                var colorClass;
+                var year = data[3].split('-')[0];
+                var month = data[3].split('-')[1];
+                var date = year + month;
+
+                var today = new Date();
+                var d = `${today.getMonth()+1}`;
+                if (d.length == 1)
+                    d = `0${d}`;
+
+                var todayDate = `${today.getFullYear()}${d}`;
+                var dangerDate = `${dangerYear}${dangerMonth}`;
+
+                if (date <= dangerDate) {
+                    $(row).addClass('table-warning');
+                    if (date <= todayDate) {
+                        $(row).addClass('table-danger');
+                    }
+                }
+            }
+        });
+
+        $("#warning-date").datepicker({
+            format: 'dd-mm-yyyy'
+        });
+        $("#warning-date").change(function () {
+            var dangerDate = $("#warning-date").val();
+            dangerYear = dangerDate.split("-")[2];
+            dangerMonth = dangerDate.split("-")[1];
+            dangerDay = dangerDate.split("-")[0];
+        });
+
+        $(".drug-link").click(function () {
+            var drugId = $(this).data("drug-id");
+            $.ajax({
+                url: "{% url 'request-entries' %}",
+                dataType: "json",
+                data: {
+                    drug_id: drugId
+                },
+                success: function (data) {
+                    entries = data.entries;
+                    selected = data.selected;
+
+                    $("#selected-drug-name").text(selected);
+                    // add each row 
+                    var $table = $("#entries-table");
+
+                    $table.DataTable().clear();
+
+                    if (entries.length > 0) {
+
+                        for (i = 0; i < entries.length; i++) {
+                            $table.dataTable().fnAddData(Object.values(entries[i]).slice(1, entries[i].length));
+                        }
+                    }
+                }
+            });
+        });
+    });
+</script>
+<!-- End of scripts-->
+
+<div class="container">
+    {% if messages %} {% for message in messages %}
+    {% if message.tags == 'success' %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+    {% else %}
+    <div class="alert alert-danger">
+        {{ message }}
+    </div>
+    {% endif %}
+    {% endfor %} {% endif %}
+
+
+    <div class="row">
+
+        {% include 'main/drugs-table.html' %}
+
+        <div class="col-md-7 col-sm-12" style="background-color:rgb(245, 245, 245)">
+
+            <h4 id="selected-drug-name">Sélectionné</h4>
+
+            <div class="col mb-3">
+                <label for="warning-date">date d'avertissement</label>
+                <input type="text" id="warning-date" style="width: 70pt;">
+
+                <button class="btn btn-primary float-right" data-toggle="modal"
+                    data-target="#sale-modal">Déstockage</button>
+            </div>
+
+            <table class="table table-hover table-bordered table-sm" id="entries-table">
+                <thead>
+                    <tr>
+                        <th scope="col"><span class="badge badge-pill badge-light">ID</span></th>
+                        <th scope="col"><span class="badge badge-pill badge-light">LOT</span></th>
+                        <th scope="col"><a href="#" id="sort-fab" class="badge badge-pill badge-dark">Date FAB</a></th>
+                        <th scope="col"><a href="#" id="sort-exp" class="badge badge-pill badge-dark">Date EXP</a></th>
+                        <th scope="col"><span class="badge badge-pill badge-light">PPA</span></th>
+                        <th scope="col"><span class="badge badge-pill badge-light">Boites</span></th>
+                    </tr>
+                </thead>
+                <tbody id="entries-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- inlcuding modal dialogs for forms -->
+{% include 'main/modal-dialogs.html' %}
+{% endblock %}

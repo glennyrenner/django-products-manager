@@ -1,0 +1,93 @@
+<!-------------------MODAL DIALOGS ------------------------------------------------------->
+<!-- Add Med dialog -->
+{% load crispy_forms_tags %}
+<div class="modal fade" id="newDrugModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter un medicament</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    {% csrf_token %} {{ new_drug_form|crispy }}
+                    <!--Kept this manual form rendering way here for future reference-->
+                    <!--
+                    {% for field in new_drug_form %}
+                        <div class="fieldWrapper">
+                            {{ field.errors}}
+                            {{ field.label_tag }} {{field}}
+                        </div>
+                    {% endfor %}
+                    -->
+                    <button type="submit" name="new_drug" class="btn btn-primary">Sauvgarder</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- new entry dialog -->
+<div class="modal fade" id="newEntryModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter un entrée</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    {% csrf_token %} {{ new_entry_form|crispy }}
+                    <script>
+                        $(function () {
+                            $("#id_exp_date").datepicker({
+                                format: 'dd/mm/yyyy'
+                            });
+                            $("#id_fab_date").datepicker({
+                                format: 'dd/mm/yyyy'
+                            });
+                        });
+                    </script>
+                    <!--Kept this manual form rendering way here for future reference-->
+                    <!--
+                    {% for field in new_drug_form %}
+                        <div class="fieldWrapper">
+                            {{ field.errors}}
+                            {{ field.label_tag }} {{field}}
+                        </div>
+                    {% endfor %}
+                    -->
+                    <button type="submit" name="new_entry" class="btn btn-primary">Sauvgarder</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- new sale dialog -->
+<div class="modal fade" id="sale-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Déstockage</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    {% csrf_token %} {{ new_sale_form|crispy }}
+                    <button type="submit" name="new_sale" class="btn btn-danger">Confirmer</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
