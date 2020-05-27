@@ -30,37 +30,18 @@
 
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
 
-    <title>Gestionaire</title>
+    <title>Gestion des produits</title>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
         <a class="navbar-brand" href="#">Gestionaire de Medicaments</a>
+
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" href="#">Fichier<span
-                            class="sr-only">(current)</span></a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#newDrugModel">Ajouter un
-                            medicament</a>
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#newEntryModel">Ajouter une
-                            entrée</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Outils</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Editer</a>
-                </li>
-            </ul>
-        </div>
     </nav>
     {% block content %}{% endblock %}
 </body>

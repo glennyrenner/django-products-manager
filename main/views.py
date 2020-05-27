@@ -4,7 +4,6 @@ from .models import *
 from .forms import *
 from django.contrib import messages
 from .globals import Globals
-from dal import autocomplete
 # Create your views here.
 
 
@@ -85,8 +84,9 @@ def request_entries(request):
                          'selected': drug_name,
                          })
 
+def add_entry(request):
+    return render(request, 'main/add_entry.html')
 
-class LOTAutocomplete(autocomplete.Select2ListView):
-    def get_list(self):
-        l = ['fuck', 'you']
-        return l
+def add_drug(request):
+    form = NewDrugForm()
+    return render(request, 'main/add_drug.html', {'form': form})

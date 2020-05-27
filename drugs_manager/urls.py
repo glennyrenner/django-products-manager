@@ -21,5 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', main_views.home, name='home'),
     path('request_entries/', main_views.request_entries, name='request-entries'),
-    path('lot-autocomplete/', main_views.LOTAutocomplete.as_view(), name='lot-autocomplete')
+    path('add_entry/', main_views.add_entry, name='add-entry'),
+    path('add_drug/', main_views.add_drug, name='add-drug'),
+
 ]

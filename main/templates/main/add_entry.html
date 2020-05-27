@@ -1,0 +1,25 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container">
+    <div class="form-group">
+        <form action="">
+            <legend>Nouvelle entrée</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="entry-number">Numéro d'entrée</label>
+                    <input type="text" class="form-control" id="entry-number">
+                </div>
+                <div class="col-md-3">
+                    <label for="entry-number">Numéro de Facture</label>
+                    <input type="text" class="form-control" id="entry-number">
+                </div>
+                <div class="col-md-3">
+                    <label for="entry-number">Date</label>
+                    <input type="text" class="form-control" id="entry-number">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -10,6 +10,10 @@
         var dangerYear = new Date().getFullYear();
         var dangerMonth = new Date().getMonth() + 3;
 
+        $("#new-drug-button").click(function(){window.location.href="{% url 'add-drug' %}"});
+
+        $('#drugs-table').DataTable({ paging: false });
+
         $('#entries-table').DataTable({
             'createdRow': function (row, data, dataIndex) {
                 var colorClass;
@@ -18,7 +22,7 @@
                 var date = year + month;
 
                 var today = new Date();
-                var d = `${today.getMonth()+1}`;
+                var d = `${today.getMonth() + 1}`;
                 if (d.length == 1)
                     d = `0${d}`;
 
@@ -37,6 +41,7 @@
         $("#warning-date").datepicker({
             format: 'dd-mm-yyyy'
         });
+
         $("#warning-date").change(function () {
             var dangerDate = $("#warning-date").val();
             dangerYear = dangerDate.split("-")[2];
@@ -91,7 +96,37 @@
 
     <div class="row">
 
-        {% include 'main/drugs-table.html' %}
+        <!-- Right side (drugs panel) -->
+        <div class="col-md-5 col-sm-12">
+
+            <div class="container">
+                <!-- Contains the drugs panel buttons on the top -->
+                <button class="btn btn-primary" id="new-drug-button">Nouveau médicament</button>
+            </div>
+
+            <table class="table table-striped" id="drugs-table">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Medicament</th>
+                        <th scope="col">Boite</th>
+                        <th scope="col">Dosage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for drug in drugs %}
+                    <tr>
+                        <th scope="row">{{drug.id}}</th>
+                        <td><a href="#" class="drug-link" data-drug-id="{{drug.id}}">
+                                {{drug.name}}</a></td>
+                        <td>{{drug.size}}</td>
+                        <td>{{drug.dosage}} {{drug.dosage_unit}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
 
         <div class="col-md-7 col-sm-12" style="background-color:rgb(245, 245, 245)">
 
