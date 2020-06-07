@@ -3,161 +3,298 @@
 {% load static %}
 <!-- Scripts -->
 <script>
+    function compareDates(d1, d2, sp = '-', direction = 0) {
+        if (direction == 0) {
+            var fd1 = d1.replace(`${sp}`, '').replace(`${sp}`, '');
+            var fd2 = d2.replace(`${sp}`, '').replace(`${sp}`, '');
+        } else if (direction == 1) {
+            // flip first then do same
+            console.log("THIS compareDate() DIRECTION ISN'T SUPPOERTED YET");
+        }
+        if (fd1 > fd2)
+            return true;
+        else
+            return false;
+    }
+
     $(document).ready(function () {
-        var entries;
-        var selected;
+        // fill cards
+        $("#clients-card").text("{{ clients }}");
+        $("#sales-card").text("{{ sales }}");
+        $("#articles-card").text("{{ articles }}");
+        $("#exp-card").text("{{ close_exps }}");
+        
+        $('#warning-date-input').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'fr'
+        });
 
-        var dangerYear = new Date().getFullYear();
-        var dangerMonth = new Date().getMonth() + 3;
+        // make a datatable
+        $("#prods-table").DataTable({
+            paging: false,
+        });
 
-        $("#new-drug-button").click(function(){window.location.href="{% url 'add-drug' %}"});
+        //$("#details-table").DataTable();
+        $('#details-table').dataTable({
+            // set only uppon initializing
+            "createdRow": function (row, data, dataIndex) {
+                var date = new Date();
 
-        $('#drugs-table').DataTable({ paging: false });
+                var dateString = date.getFullYear() + '-'
+                    + ('0' + (date.getMonth() + 1)).slice(-2) + '-'
+                    + ('0' + (date.getDate() + 1)).slice(-2);
 
-        $('#entries-table').DataTable({
-            'createdRow': function (row, data, dataIndex) {
-                var colorClass;
-                var year = data[3].split('-')[0];
-                var month = data[3].split('-')[1];
-                var date = year + month;
-
-                var today = new Date();
-                var d = `${today.getMonth() + 1}`;
-                if (d.length == 1)
-                    d = `0${d}`;
-
-                var todayDate = `${today.getFullYear()}${d}`;
-                var dangerDate = `${dangerYear}${dangerMonth}`;
-
-                if (date <= dangerDate) {
-                    $(row).addClass('table-warning');
-                    if (date <= todayDate) {
-                        $(row).addClass('table-danger');
-                    }
+                var expired = compareDates(dateString, data[1], sp = '-');
+                if (data[2] <= 0) {
+                    $(row).addClass("table-secondary");
+                }
+                else if (expired) {
+                    $(row).addClass("table-danger");
                 }
             }
         });
 
-        $("#warning-date").datepicker({
-            format: 'dd-mm-yyyy'
-        });
-
-        $("#warning-date").change(function () {
-            var dangerDate = $("#warning-date").val();
-            dangerYear = dangerDate.split("-")[2];
-            dangerMonth = dangerDate.split("-")[1];
-            dangerDay = dangerDate.split("-")[0];
-        });
-
-        $(".drug-link").click(function () {
-            var drugId = $(this).data("drug-id");
-            $.ajax({
-                url: "{% url 'request-entries' %}",
-                dataType: "json",
-                data: {
-                    drug_id: drugId
-                },
-                success: function (data) {
-                    entries = data.entries;
-                    selected = data.selected;
-
-                    $("#selected-drug-name").text(selected);
-                    // add each row 
-                    var $table = $("#entries-table");
-
-                    $table.DataTable().clear();
-
-                    if (entries.length > 0) {
-
-                        for (i = 0; i < entries.length; i++) {
-                            $table.dataTable().fnAddData(Object.values(entries[i]).slice(1, entries[i].length));
-                        }
-                    }
+        // ajax request the meds
+        $.ajax({
+            url: "{% url 'get-drugs-list' %}",
+            dataType: 'json',
+            type: 'GET',
+            data: {
+                args: 'none'
+            },
+            success: function (data) {
+                for (var i = 0; i < data.drugs.length; i++) {
+                    $("#prods-table").dataTable().fnAddData(Object.values(data.drugs[i]));
                 }
-            });
+            },
+            failure: function (data) {
+                console.log("Failure to receive JSON");
+            }
+        });
+
+        $('#prods-table tbody').on('click', 'tr', function () {
+            if ($(this).hasClass('selected')) {
+                $(this).removeClass('selected');
+                $("#more-btn").removeClass('btn-primary');
+                $("#more-btn").addClass('btn-secondary');
+            }
+            else {
+                $('#prods-table').DataTable().$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+                $("#more-btn").removeClass('btn-secondary');
+                $("#more-btn").addClass('btn-primary');
+            }
+        });
+
+        $('#more-btn').click(function () {
+            var table = $('#prods-table').DataTable();
+
+            try {
+                var sName = table.row('.selected').data()[0];
+                var sDosage = table.row('.selected').data()[1];
+                var sSize = table.row('.selected').data()[2];
+
+                $.ajax({
+                    url: "{% url 'get-drug-details' %}",
+                    dataType: 'json',
+                    data: {
+                        name: sName,
+                        dosage: sDosage,
+                        size: sSize
+                    },
+                    success: function (data) {
+                        $("#details-modal").modal('show');
+                        $("#details-table").DataTable().clear()
+                        $("#details-modal-title").text(`${sName} ${sDosage} | Boite de ${sSize}`);
+                        for (var i = 0; i < data.lots.length; i++) {
+                            $("#details-table").dataTable().fnAddData(Object.values(data.lots[i]));
+                        }
+                    },
+                    failure: function (data) {
+                        console.log("Oh shit Morty!, Json fucked up.");
+                    }
+                });
+            }
+            catch (err) {
+                $("#none-selected-modal").modal('show');
+            }
         });
     });
 </script>
-<!-- End of scripts-->
 
-<div class="container">
-    {% if messages %} {% for message in messages %}
-    {% if message.tags == 'success' %}
-    <div class="alert alert-success">
-        {{ message }}
-    </div>
-    {% else %}
-    <div class="alert alert-danger">
-        {{ message }}
-    </div>
-    {% endif %}
-    {% endfor %} {% endif %}
+<!-- Layout -->
+<div style="background-color: rgb(215, 223, 230);">
+    <h3 class="mx-5 px-2">Inventaire</h3>
+    <div class="row mx-5">
 
-
-    <div class="row">
-
-        <!-- Right side (drugs panel) -->
-        <div class="col-md-5 col-sm-12">
-
-            <div class="container">
-                <!-- Contains the drugs panel buttons on the top -->
-                <button class="btn btn-primary" id="new-drug-button">Nouveau médicament</button>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <div class="float-left">
+                        <h2 class="card-title" id="clients-card">124</h2>
+                        <p class="card-text">Clients enregistrés</p>
+                    </div>
+                    <div class="float-right">
+                        <svg class="bi bi-person-check-fill" width="3em" height="3em" viewBox="0 0 16 16"
+                            fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm9.854-2.854a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L12.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
+                        </svg>
+                    </div>
+                </div>
             </div>
-
-            <table class="table table-striped" id="drugs-table">
-                <thead>
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Medicament</th>
-                        <th scope="col">Boite</th>
-                        <th scope="col">Dosage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for drug in drugs %}
-                    <tr>
-                        <th scope="row">{{drug.id}}</th>
-                        <td><a href="#" class="drug-link" data-drug-id="{{drug.id}}">
-                                {{drug.name}}</a></td>
-                        <td>{{drug.size}}</td>
-                        <td>{{drug.dosage}} {{drug.dosage_unit}}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
 
-
-        <div class="col-md-7 col-sm-12" style="background-color:rgb(245, 245, 245)">
-
-            <h4 id="selected-drug-name">Sélectionné</h4>
-
-            <div class="col mb-3">
-                <label for="warning-date">date d'avertissement</label>
-                <input type="text" id="warning-date" style="width: 70pt;">
-
-                <button class="btn btn-primary float-right" data-toggle="modal"
-                    data-target="#sale-modal">Déstockage</button>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <div class="float-left">
+                        <h2 class="card-title" id="articles-card">2,544</h2>
+                        <p class="card-text">Articles en stock</p>
+                    </div>
+                    <div class="float-right">
+                        <svg class="bi bi-collection-fill" width="3em" height="3em" viewBox="0 0 16 16"
+                            fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="16" height="10" rx="1.5" transform="matrix(1 0 0 -1 0 14.5)" />
+                            <path fill-rule="evenodd"
+                                d="M2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1z" />
+                        </svg>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <table class="table table-hover table-bordered table-sm" id="entries-table">
-                <thead>
-                    <tr>
-                        <th scope="col"><span class="badge badge-pill badge-light">ID</span></th>
-                        <th scope="col"><span class="badge badge-pill badge-light">LOT</span></th>
-                        <th scope="col"><a href="#" id="sort-fab" class="badge badge-pill badge-dark">Date FAB</a></th>
-                        <th scope="col"><a href="#" id="sort-exp" class="badge badge-pill badge-dark">Date EXP</a></th>
-                        <th scope="col"><span class="badge badge-pill badge-light">PPA</span></th>
-                        <th scope="col"><span class="badge badge-pill badge-light">Boites</span></th>
-                    </tr>
-                </thead>
-                <tbody id="entries-table-body"></tbody>
-            </table>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <div class="float-left">
+                        <h2 class="card-title" id="sales-card">1,214</h2>
+                        <p class="card-text">Ordonnances enregistrées</p>
+                    </div>
+                    <div class="float-right">
+                        <svg class="bi bi-trophy" width="3em" height="3em" viewBox="0 0 16 16" fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M3 1h10c-.495 3.467-.5 10-5 10S3.495 4.467 3 1zm0 15a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1H3zm2-1a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1H5z" />
+                            <path fill-rule="evenodd"
+                                d="M12.5 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-3 2a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm-6-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-3 2a3 3 0 1 1 6 0 3 3 0 0 1-6 0z" />
+                            <path d="M7 10h2v4H7v-4z" />
+                            <path d="M10 11c0 .552-.895 1-2 1s-2-.448-2-1 .895-1 2-1 2 .448 2 1z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <div class="float-left">
+                        <h2 class="card-title" id="exp-card">2</h2>
+                        <p class="card-text">Expiration proche</p>
+                    </div>
+                    <div class="float-right">
+                        <svg class="bi bi-dash-circle-fill" width="3em" height="3em" viewBox="0 0 16 16"
+                            fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4 7.5a.5.5 0 0 0 0 1h8a.5.5 0 0 0 0-1H4z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="mt-3 mx-2">
+    <table class="table" id="prods-table">
+        <thead>
+            <tr>
+                <th scope="col">Produit</th>
+                <th scope="col">Dosage</th>
+                <th scope="col">Boite de</th>
+                <th scope="col">Qte</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<button class="btn btn-secondary float-right mr-5" id="more-btn">
+    Afficher détails</button>
+
+
+<!------------------------------------------- MODALS -------------------------------------------->
+
+<!-- Details Modal -->
+<div class="modal fade" id="details-modal" tabindex="-1" role="dialog" aria-labelledby="details-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 1000px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="details-modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <!--
+                        date picker for warning
+                    <div style="background-color: aliceblue;" class='row px-3 py-2 mb-2'>
+                        <div class="col-md-3">
+                            <label for="warning-date-input">Date d'avertissement</label>
+                            <input type="text" class="form-control" id="warning-date-input">
+                        </div>
+                    </div>
+                    -->
+                    <table class="table table-bordered" id="details-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Lot</th>
+                                <th scope="col">Date péremp.</th>
+                                <th scope="col">Qte</th>
+                                <th scope="col">TVA</th>
+                                <th scope="col">HT</th>
+                                <th scope="col">PPA</th>
+                                <th scope="col">Marge</th>
+                                <th scope="col">Entrée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            </div>
         </div>
     </div>
 </div>
 
 
-<!-- inlcuding modal dialogs for forms -->
-{% include 'main/modal-dialogs.html' %}
+<div class="modal fade" id="none-selected-modal" tabindex="-1" role="dialog" aria-labelledby="none-selected-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 300px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="details-modal-title">Oups!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    Veuillez sélectionner un produit
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

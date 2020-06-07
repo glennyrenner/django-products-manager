@@ -1,0 +1,263 @@
+{% extends 'main/base.html' %}
+{% block content %}
+{% csrf_token %}
+<!-- SCRIPT -->
+<script>
+    $(document).ready(function () {
+        // globals 
+        var presc = {
+            prods: []
+        };
+
+        // make table datatable
+        var table = $("#prods-table").DataTable({
+            paging: false,
+            bFilter: false, bInfo: false
+        });
+
+        // select items
+        $('#prods-table tbody').on('click', 'tr', function () {
+            if ($(this).hasClass('selected')) {
+                $(this).removeClass('selected');
+            }
+            else {
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        });
+
+        // delete selected
+        $('#remove-btn').click(function () {
+            var sName = table.row('.selected').data()[0];
+            var sDosage = table.row('.selected').data()[1];
+            var sLot = table.row('.selected').data()[3];
+
+            for (var i = 0; i < presc.prods.length; i++) {
+                if (presc.prods[i].name == sName
+                    && presc.prods[i].dosage == sDosage
+                    && presc.prods[i].lot == sLot) {
+                    presc.prods.splice(i, 1);
+                }
+            }
+
+            table.row('.selected').remove().draw(false);
+        });
+
+        // auto caps product name and other fields formatting
+        $("#product-name").change(function () {
+            var name = $(this).val();
+            name = name.toUpperCase().toString();
+            name = name.replace(/  /g, ' ');
+            name = name.replace(/  /g, ' ');
+            $(this).val(name.trim());
+        });
+        $("#client-fname").change(function () {
+            var name = $(this).val();
+            name = name.toUpperCase().toString();
+            name = name.replace(/  /g, ' ');
+            name = name.replace(/  /g, ' ');
+            $(this).val(name.trim());
+        });
+        $("#client-lname").change(function () {
+            var name = $(this).val();
+            name = name.toUpperCase().toString();
+            name = name.replace(/  /g, ' ');
+            name = name.replace(/  /g, ' ');
+            $(this).val(name.trim());
+        });
+        $("#client-secnum").change(function () {
+            var name = $(this).val();
+            name = name.toString();
+            name = name.replace(/  /g, ' ');
+            name = name.replace(/  /g, ' ');
+            $(this).val(name.trim());
+        });
+
+        $("#product-dosage").change(function () {
+            var string = $(this).val();
+            string = string.replace(/ /g, '').toLowerCase();
+            $(this).val(string.toString());
+        });
+
+        // add row on button click 
+        $("#add-btn").click(function () {
+            var prod;
+            prod = {
+                name: $("#drug-name").val(),
+                dosage: $("#drug-dosage").val(),
+                size: $("#drug-size").val(),
+                lot: $("#drug-lot").val(),
+                qtt: $("#drug-qte").val(),
+            };
+
+            // validate through ajax and update the exp-date and ppa
+            $.ajax({
+                url: "{% url 'get-product-info' %}",
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    lot: prod.lot,
+                    name: prod.name,
+                    qtt: prod.qtt,
+                    size: prod.size,
+                    dosage: prod.dosage
+                },
+                success: function (data) {
+                    if (data.status) {
+                        prod.exp = data.exp_date;
+                        prod.ppa = data.ppa;
+                        presc.prods.push(prod);
+                        $("#prods-table").dataTable().fnAddData(Object.values(prod));
+                        $("#alert").text('');
+                        $("#alert").removeClass();
+                    } else {
+                        $("#alert").text(data.msg);
+                        $("#alert").removeClass();
+                        $("#alert").addClass("alert alert-warning");
+                    }
+                },
+                failure: function (data) {
+                    console.log("Unexpected Error");
+                }
+            });
+
+
+        });
+
+        // save new presc and back to inventory view
+        $("#save-all-btn").click(function () {
+            presc.f_name = $("#client-fname").val();
+            presc.l_name = $("#client-lname").val();
+            presc.sec_num = $("#client-secnum").val();
+            // send it over
+
+            $.ajax({
+                // CHANGE THIS SHIT ASAP
+                url: "{% url 'save-sale' %}",
+                dataType: 'json',
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                    presc: JSON.stringify(presc)
+                },
+                success: function (data) {
+                    $("#alert").text(data.message);
+                    $("#alert").removeClass();
+                    $("#alert").addClass("alert " + data.tag);
+                    location.hash = "#alert";
+                },
+                failure: function (data) {
+                    $("#alert").text(data.message);
+                    $("#alert").removeClass();
+                    $("#alert").addClass("alert " + data.tag);
+                    location.hash = "#alert";
+                }
+            });
+        });
+    });
+</script>
+
+<!-- TEMPLATE -->
+<div class="container mb-5">
+    <h3 class="mt-4">Nouvelle ordonnance</h3>
+    <!-- presc information -->
+    <div class="alert" id="alert"></div>
+    <form>
+        <div class="form-group">
+            <legend>Information client</legend>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="entry-number">Nom</label>
+                    <input type="text" class="form-control" id="client-fname">
+                </div>
+                <div class="col-md-4">
+                    <label for="entry-number">Prenom</label>
+                    <input type="text" class="form-control" id="client-lname">
+                </div>
+                <div class="col-md-4">
+                    <label for="entry-number">NSS</label>
+                    <input type="text" class="form-control" id="client-secnum">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- current drug information -->
+    <form class="px-3 py-3">
+        <legend>Produit</legend>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                    <p>Produit</p>
+                </div>
+                <div class="col-md-3">
+                    <p>Dosage</p>
+                </div>
+                <div class="col-md-3">
+                    <p>Boite de</p>
+                </div>
+                <div class="col-md-2">
+                    <p>Lot</p>
+                </div>
+                <div class="col-md-1">
+                    <p>Qte</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <select id="drug-name" class="selectpicker" data-live-search="true">
+                        {% for drug in drugs %}
+                        <option>{{drug.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="drug-dosage" class="selectpicker" data-live-search="true">
+                        {% for drug in drugs %}
+                        <option>{{drug.dosage}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="drug-size" class="selectpicker" data-live-search="true">
+                        {% for drug in drugs %}
+                        <option>{{drug.size}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input class="form-control" id="drug-lot" type="text"></input>
+                </div>
+                <div class="col-md-1">
+                    <input class="form-control" id="drug-qte" type="number"></input>
+                </div>
+            </div>
+        </div>
+    </form>
+    <button class="btn btn-primary float-right my-3 mx-2" id="add-btn">
+        Ajouter Produit</button>
+    <button class="btn btn-danger float-right my-3 mx-2" id="remove-btn">
+        Supprimer Produit</button>
+
+    <!-- products table -->
+    <div class="container mt-5 mb-5">
+        <table class="table table-hover table-bordered table-sm" id="prods-table">
+            <thead>
+                <tr>
+                    <th scope="col"><span class="badge badge-pill badge-light">Produit</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Dosage</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Boite</span></th>
+                    <th scope="col"><a href="#" class="badge badge-pill badge-light">Lot</a></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Qte</span></th>
+                    <th scope="col"><a href="#" class="badge badge-pill badge-light">Date Peremp</a></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">PPA</span></th>
+                </tr>
+            </thead>
+            <tbody id=""></tbody>
+        </table>
+    </div>
+    <button class="btn btn-success float-right my-3 mx-2" id="save-all-btn">
+        Enregister</button>
+</div>
+</div>
+{% endblock %}

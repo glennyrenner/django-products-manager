@@ -1,10 +1,11 @@
 {% extends 'main/base.html' %}
-{% block content %}
 {% load crispy_forms_tags %}
+{% block content %}
 <div class='container'>
     <form method="POST" action="{% url 'home' %}">
         <!-- now pass in the form from the views.py and keep on-->
-        {% csrf_token %} {{ form|crispy }}
+        {% csrf_token %}
+        {{ form|crispy }}
         <button type="submit" name="new_drug" class="btn btn-primary">Sauvgarder</button>
         <a class="btn btn-secondary" href="{% url 'home' %}">Annuler</a>
     </form>

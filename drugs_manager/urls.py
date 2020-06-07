@@ -21,7 +21,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', main_views.home, name='home'),
     path('request_entries/', main_views.request_entries, name='request-entries'),
-    path('add_entry/', main_views.add_entry, name='add-entry'),
     path('add_drug/', main_views.add_drug, name='add-drug'),
-
+    path('add_sale/', main_views.add_sale, name='add-sale'),
+    path('add_entry/', main_views.add_entry, name='add-entry'),
+    path('save_entry/', main_views.save_entry, name='save-entry'),
+    path('get_product_info/', main_views.get_prod_info, name='get-product-info'),
+    path('save_sale/', main_views.save_sale, name='save-sale'),
+    path('get_drugs_list/', main_views.get_drugs_list, name='get-drugs-list'),
+    path('get-drug-details/', main_views.get_drug_details, name='get-drug-details'),
 ]

@@ -1,25 +1,235 @@
 {% extends 'main/base.html' %}
-{% load crispy_forms_tags %}
 {% block content %}
-<div class="container">
-    <div class="form-group">
-        <form action="">
+{% csrf_token %}
+<!-- SCRIPT -->
+<script>
+    $(document).ready(function () {
+        // globals 
+        $('#entry-number').val(`${(new Date()).getTime()}`);
+
+        $('#entry-date').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'fr'
+        });
+
+        $('#product-date').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'fr'
+        });
+        
+        var entry = {
+            num: null,
+            bill: null,
+            date: null,
+            prods: []
+        };
+
+        // make table datatable
+        var table = $("#prods-table").DataTable({
+            paging: false,
+            bFilter: false, bInfo: false
+        });
+
+        // select items
+        $('#prods-table tbody').on('click', 'tr', function () {
+            if ($(this).hasClass('selected')) {
+                $(this).removeClass('selected');
+            }
+            else {
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        });
+
+        // delete selected
+        $('#remove-btn').click(function () {
+            var sName = table.row('.selected').data()[0];
+            var sDosage = table.row('.selected').data()[1];
+            var sLot = table.row('.selected').data()[3];
+
+            for (var i = 0; i < entry.prods.length; i++) {
+                if (entry.prods[i].name == sName
+                    && entry.prods[i].dosage == sDosage
+                    && entry.prods[i].lot == sLot) {
+                    entry.prods.splice(i, 1);
+                }
+            }
+
+            table.row('.selected').remove().draw(false);
+        });
+
+        // auto caps product name and other fields formatting
+        $("#product-name").change(function () {
+            var name = $(this).val();
+            name = name.toUpperCase().toString();
+            name = name.replace(/  /g, ' ');
+            name = name.replace(/  /g, ' ');
+            $(this).val(name.trim());
+        });
+
+        $("#product-dosage").change(function () {
+            var string = $(this).val();
+            string = string.replace(/ /g, '').toLowerCase();
+            $(this).val(string.toString());
+        });
+
+        // add row on button click 
+        $("#add-btn").click(function () {
+            var prod;
+            prod = {
+                name: $("#product-name").val(),
+                dosage: $("#product-dosage").val(),
+                size: $("#product-size").val(),
+                lot: $("#product-lot").val(),
+                exp: $("#product-date").val(),
+                qtt: $("#product-qtt").val(),
+                tva: $("#product-tva").val(),
+                ht: $("#product-ht").val(),
+                ppa: $("#product-ppa").val(),
+                marge: $("#product-marge").val()
+            };
+            entry.prods.push(prod);
+            // update table
+            $("#prods-table").dataTable().fnAddData(Object.values(prod));
+        });
+
+        // save new entry and back to inventory view
+        $("#save-all-btn").click(function () {
+            entry.num = $("#entry-number").val();
+            entry.bill = $("#entry-bill").val();
+            entry.date = $("#entry-date").val();
+            // send it over
+
+            $.ajax({
+                url: "{% url 'save-entry' %}",
+                dataType: 'json',
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                    num: entry.num,
+                    bill: entry.bill,
+                    date: entry.date,
+                    prods: JSON.stringify(entry.prods)
+                },
+                success: function (data) {
+                    $("#alert").text(data.message);
+                    $("#alert").removeClass();
+                    $("#alert").addClass("alert " + data.tag);
+                    location.hash = "#alert";
+                },
+                failure: function (data) {
+                    $("#alert").text(data.message);
+                    $("#alert").removeClass();
+                    $("#alert").addClass("alert " + data.tag);
+                    location.hash = "#alert";
+                }
+            });
+        });
+    });
+</script>
+
+<!-- TEMPLATE -->
+<div class="container mb-5">
+    <!-- entry information -->
+    <div class="alert" id="alert"></div>
+    <form>
+        <div class="form-group">
             <legend>Nouvelle entrée</legend>
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <label for="entry-number">Numéro d'entrée</label>
                     <input type="text" class="form-control" id="entry-number">
                 </div>
                 <div class="col-md-3">
-                    <label for="entry-number">Numéro de Facture</label>
-                    <input type="text" class="form-control" id="entry-number">
+                    <label for="entry-bill">Numéro de Facture</label>
+                    <input type="text" class="form-control" id="entry-bill">
                 </div>
                 <div class="col-md-3">
-                    <label for="entry-number">Date</label>
-                    <input type="text" class="form-control" id="entry-number">
+                    <label for="entry-date">Date</label>
+                    <input type="text" class="form-control"
+                        id="entry-date">
                 </div>
             </div>
-        </form>
+        </div>
+    </form>
+
+    <!-- current drug information -->
+    <form class="bg-light px-3 py-3">
+        <legend>Produit</legend>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="product-name input-group-prepend">Produit</label>
+                    <input type="text" class="form-control input-group" id="product-name">
+                </div>
+                <div class="col-md-2">
+                    <label for="product-dosage input-group-prepend">Dosage</label>
+                    <input type="text" class="form-control input-group" id="product-dosage">
+                </div>
+                <div class="col-md-2">
+                    <label for="product-size input-group-prepend">Boite de</label>
+                    <input type="number" class="form-control input-group" id="product-size">
+                </div>
+                <div class="col-md-2">
+                    <label for="product-lot">Num Lot</label>
+                    <input type="text" class="form-control" id="product-lot">
+                </div>
+                <div class="col-md-2">
+                    <label for="product-date">Date Peremp</label>
+                    <input type="text" class="form-control" id="product-date">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    <label for="product-qtt">Qte Recue</label>
+                    <input type="number" class="form-control" id="product-qtt">
+                </div>
+                <div class="col-md-2">
+                    <label for="product-tva">TVA</label>
+                    <input type="number" step="0.01" class="form-control" id="product-tva">
+                </div>
+                <div class="col-md-3">
+                    <label for="product-ht">Prix HT</label>
+                    <input type="number" step="0.01" class="form-control" id="product-ht">
+                </div>
+                <div class="col-md-3">
+                    <label for="product-ppa">Prix PPA</label>
+                    <input type="number" step="0.01" class="form-control" id="product-ppa">
+                </div>
+                <div class="col-md-2">
+                    <label for="product-marge">Marge</label>
+                    <input type="number" step="0.01" class="form-control" id="product-marge">
+                </div>
+            </div>
+        </div>
+    </form>
+    <button class="btn btn-primary float-right my-3 mx-2" id="add-btn">
+        Ajouter Produit</button>
+    <button class="btn btn-danger float-right my-3 mx-2" id="remove-btn">
+        Supprimer Produit</button>
+
+    <!-- products table -->
+    <div class="container mt-5 mb-5">
+        <table class="table table-hover table-bordered table-sm" id="prods-table">
+            <thead>
+                <tr>
+                    <th scope="col"><span class="badge badge-pill badge-light">Produit</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Dosage</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Boite</span></th>
+                    <th scope="col"><a href="#" class="badge badge-pill badge-light">Lot</a></th>
+                    <th scope="col"><a href="#" class="badge badge-pill badge-light">Date Peremp</a></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Qte</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">TVA</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">HT</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">PPA</span></th>
+                    <th scope="col"><span class="badge badge-pill badge-light">Marge</span></th>
+                </tr>
+            </thead>
+            <tbody id=""></tbody>
+        </table>
     </div>
+    <button class="btn btn-success float-right my-3 mx-2" id="save-all-btn">
+        Enregister</button>
+</div>
 </div>
 {% endblock %}
