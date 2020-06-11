@@ -23,35 +23,10 @@
         $("#sales-card").text("{{ sales }}");
         $("#articles-card").text("{{ articles }}");
         $("#exp-card").text("{{ close_exps }}");
-        
+
         $('#warning-date-input').datepicker({
             format: 'dd/mm/yyyy',
             language: 'fr'
-        });
-
-        // make a datatable
-        $("#prods-table").DataTable({
-            paging: false,
-        });
-
-        //$("#details-table").DataTable();
-        $('#details-table').dataTable({
-            // set only uppon initializing
-            "createdRow": function (row, data, dataIndex) {
-                var date = new Date();
-
-                var dateString = date.getFullYear() + '-'
-                    + ('0' + (date.getMonth() + 1)).slice(-2) + '-'
-                    + ('0' + (date.getDate() + 1)).slice(-2);
-
-                var expired = compareDates(dateString, data[1], sp = '-');
-                if (data[2] <= 0) {
-                    $(row).addClass("table-secondary");
-                }
-                else if (expired) {
-                    $(row).addClass("table-danger");
-                }
-            }
         });
 
         // ajax request the meds
@@ -64,59 +39,82 @@
             },
             success: function (data) {
                 for (var i = 0; i < data.drugs.length; i++) {
-                    $("#prods-table").dataTable().fnAddData(Object.values(data.drugs[i]));
+                    // add data to the table here
+                    $("#prods-table tbody").append(`
+                        <tr>
+                            <td class="name-cell">${data.drugs[i].name}</td>
+                            <td>
+                                <a class="details-button" style="cursor: pointer;">
+                                    <svg class="bi bi-list" width="2em" height="2em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                                    </svg>
+                                </a>
+                            </td>
+                            <td class="dosage-cell">${data.drugs[i].dosage}</td>
+                            <td class="size-cell">${data.drugs[i].size}</td>
+                            <td class="qtt-cell">${data.drugs[i].qtt}</td>
+                        </tr>
+                    `);
                 }
+
+                // Gotta be here to do the job when ready 
+                $('.details-button').click(function () {
+
+                    try {
+                        var sName = $(this).parent().siblings('.name-cell').text();
+                        var sDosage = $(this).parent().siblings('.dosage-cell').text();
+                        var sSize = $(this).parent().siblings('.size-cell').text();
+
+                        $.ajax({
+                            url: "{% url 'get-drug-details' %}",
+                            dataType: 'json',
+                            data: {
+                                name: sName,
+                                dosage: sDosage,
+                                size: sSize
+                            },
+                            success: function (data) {
+                                $("#details-modal").modal('show');
+                                $("#details-modal-title").text(`${sName} ${sDosage} | Boite de ${sSize}`);
+                                $("#details-table tbody").html('');
+                                for (var i = 0; i < data.lots.length; i++) {
+                                    let today = (new Date()).getFullYear() + '-'
+                                        + ('0' + (new Date()).getMonth()).slice(-2) + '-'
+                                        + ('0' + (new Date()).getDate()).slice(-2)
+                                    let rowClass = '';
+                                    if (data.lots[i].qte == 0) {
+                                        rowClass = "table-secondary";
+                                    }
+                                    else if (!compareDates(data.lots[i].exp_date, today)) {
+                                        rowClass = "table-danger";
+                                    }
+
+                                    $("#details-table tbody").append(`
+                                        <tr class="${rowClass}">
+                                            <td>${data.lots[i].number}</td>
+                                            <td>${data.lots[i].exp_date}</td>
+                                            <td>${data.lots[i].qte}</td>
+                                            <td>${data.lots[i].tva}</td>
+                                            <td>${data.lots[i].ht}</td>
+                                            <td>${data.lots[i].ppa}</td>
+                                            <td>${data.lots[i].marge}</td>
+                                            <td>${data.lots[i].entry}</td>
+                                        </tr>
+                                    `);
+                                }
+                            },
+                            failure: function (data) {
+                                console.log("Oh shit Morty!, Json fucked up.");
+                            }
+                        });
+                    }
+                    catch (err) {
+                        $("#none-selected-modal").modal('show');
+                    }
+                });
             },
             failure: function (data) {
                 console.log("Failure to receive JSON");
-            }
-        });
-
-        $('#prods-table tbody').on('click', 'tr', function () {
-            if ($(this).hasClass('selected')) {
-                $(this).removeClass('selected');
-                $("#more-btn").removeClass('btn-primary');
-                $("#more-btn").addClass('btn-secondary');
-            }
-            else {
-                $('#prods-table').DataTable().$('tr.selected').removeClass('selected');
-                $(this).addClass('selected');
-                $("#more-btn").removeClass('btn-secondary');
-                $("#more-btn").addClass('btn-primary');
-            }
-        });
-
-        $('#more-btn').click(function () {
-            var table = $('#prods-table').DataTable();
-
-            try {
-                var sName = table.row('.selected').data()[0];
-                var sDosage = table.row('.selected').data()[1];
-                var sSize = table.row('.selected').data()[2];
-
-                $.ajax({
-                    url: "{% url 'get-drug-details' %}",
-                    dataType: 'json',
-                    data: {
-                        name: sName,
-                        dosage: sDosage,
-                        size: sSize
-                    },
-                    success: function (data) {
-                        $("#details-modal").modal('show');
-                        $("#details-table").DataTable().clear()
-                        $("#details-modal-title").text(`${sName} ${sDosage} | Boite de ${sSize}`);
-                        for (var i = 0; i < data.lots.length; i++) {
-                            $("#details-table").dataTable().fnAddData(Object.values(data.lots[i]));
-                        }
-                    },
-                    failure: function (data) {
-                        console.log("Oh shit Morty!, Json fucked up.");
-                    }
-                });
-            }
-            catch (err) {
-                $("#none-selected-modal").modal('show');
             }
         });
     });
@@ -203,15 +201,15 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
 <div class="mt-3 mx-2">
-    <table class="table" id="prods-table">
+    <table class="table table-striped" id="prods-table">
         <thead>
             <tr>
                 <th scope="col">Produit</th>
+                <th scope="col"></th>
                 <th scope="col">Dosage</th>
                 <th scope="col">Boite de</th>
                 <th scope="col">Qte</th>
@@ -221,9 +219,6 @@
         </tbody>
     </table>
 </div>
-
-<button class="btn btn-secondary float-right mr-5" id="more-btn">
-    Afficher détails</button>
 
 
 <!------------------------------------------- MODALS -------------------------------------------->
@@ -241,17 +236,8 @@
             </div>
             <div class="modal-body">
                 <div class="container">
-                    <!--
-                        date picker for warning
-                    <div style="background-color: aliceblue;" class='row px-3 py-2 mb-2'>
-                        <div class="col-md-3">
-                            <label for="warning-date-input">Date d'avertissement</label>
-                            <input type="text" class="form-control" id="warning-date-input">
-                        </div>
-                    </div>
-                    -->
                     <table class="table table-bordered" id="details-table">
-                        <thead>
+                        <thead class="table-dark">
                             <tr>
                                 <th scope="col">Lot</th>
                                 <th scope="col">Date péremp.</th>
@@ -267,32 +253,6 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="none-selected-modal" tabindex="-1" role="dialog" aria-labelledby="none-selected-modal-label"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document" style="max-width: 300px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="details-modal-title">Oups!</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="container">
-                    Veuillez sélectionner un produit
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>

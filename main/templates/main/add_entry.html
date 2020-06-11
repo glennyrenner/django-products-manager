@@ -24,12 +24,6 @@
             prods: []
         };
 
-        // make table datatable
-        var table = $("#prods-table").DataTable({
-            paging: false,
-            bFilter: false, bInfo: false
-        });
-
         // select items
         $('#prods-table tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
@@ -90,7 +84,21 @@
             };
             entry.prods.push(prod);
             // update table
-            $("#prods-table").dataTable().fnAddData(Object.values(prod));
+
+            $("#prods-table tbody").append(`
+                <tr>
+                    <td>${prod.name}</td>
+                    <td>${prod.dosage}</td>
+                    <td>${prod.size}</td>
+                    <td>${prod.lot}</td>
+                    <td>${prod.exp}</td>
+                    <td>${prod.qtt}</td>
+                    <td>${prod.tva}</td>
+                    <td>${prod.ht}</td>
+                    <td>${prod.ppa}</td>
+                    <td>${prod.marge}</td>
+                </tr>
+            `);
         });
 
         // save new entry and back to inventory view

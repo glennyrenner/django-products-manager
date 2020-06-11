@@ -9,12 +9,6 @@
             prods: []
         };
 
-        // make table datatable
-        var table = $("#prods-table").DataTable({
-            paging: false,
-            bFilter: false, bInfo: false
-        });
-
         // select items
         $('#prods-table tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
@@ -107,7 +101,18 @@
                         prod.exp = data.exp_date;
                         prod.ppa = data.ppa;
                         presc.prods.push(prod);
-                        $("#prods-table").dataTable().fnAddData(Object.values(prod));
+                        console.log(data);
+                        $("#prods-table tbody").append(`
+                            <tr>
+                                <td>${prod.name}</td>
+                                <td>${prod.dosage}</td>
+                                <td>${prod.size}</td>
+                                <td>${prod.lot}</td>
+                                <td>${prod.qtt}</td>
+                                <td>${data.exp_date}</td>
+                                <td>${data.ppa}</td>
+                            </tr>
+                        `);
                         $("#alert").text('');
                         $("#alert").removeClass();
                     } else {
