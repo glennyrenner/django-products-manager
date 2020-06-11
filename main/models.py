@@ -9,7 +9,7 @@ class Drug(models.Model):
     size = models.IntegerField(default=30)
 
     def __str__(self):
-        return f'{self.name} {self.dosage}{self.size}'
+        return '{} {}{}'.format(self.name, self.dosage, self.size)
 
 
 class Entry(models.Model):
