@@ -271,4 +271,8 @@ def sales_history(request):
     return render(request, "main/sales_history.html")
 
 def entries_history(request):
-    return render(request, "main/entries_history.html")
+    entries = Entry.objects.all()
+    context = {
+        'entries': entries
+    }
+    return render(request, "main/entries_history.html", context)
