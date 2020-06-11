@@ -172,7 +172,8 @@ def save_entry(request):
                 tva=prod['tva'],
                 ht=prod['ht'],
                 ppa=prod['ppa'],
-                marge=prod['marge']
+                marge=prod['marge'],
+                shp=prod['shp'],
             )
             # already have these or new shit?
             existing = Drug.objects.filter(name=prod['name'],
@@ -216,7 +217,8 @@ def get_drug_details(request):
             'ht': l.ht,
             'ppa': l.ppa,
             'marge': l.marge,
-            'entry': l.entry.number
+            'entry': l.entry.number,
+            'shp': l.shp
         })
 
     full_name = '{} {} B/{}'.format(
@@ -263,3 +265,10 @@ def get_prod_info(request):
         'ppa': prod.ppa,
         'exp_date': prod.exp_date
     })
+
+
+def sales_history(request):
+    return render(request, "main/sales_history.html")
+
+def entries_history(request):
+    return render(request, "main/entries_history.html")

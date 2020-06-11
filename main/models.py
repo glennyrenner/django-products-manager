@@ -31,7 +31,8 @@ class Lot(models.Model):
     ht = models.CharField(max_length=30)
     ppa = models.CharField(max_length=30)
     marge = models.CharField(max_length=30)
-
+    shp = models.CharField(max_length=30, default='2.0')
+    
     def __str__(self):
         return '{} LOT:{} {}'.format(self.drug.name, self.lot_number, self.exp_date)
 
