@@ -114,7 +114,7 @@ def save_sale(request):
 
         prods_str = ''
         for p in presc['prods']:
-            prods_str += '{} {} {} {} | '.format(
+            prods_str += '{}_{}_{}_{}|'.format(
                 p['name'],
                 p['dosage'],
                 p['qtt'],
@@ -268,7 +268,16 @@ def get_prod_info(request):
 
 
 def sales_history(request):
-    return render(request, "main/sales_history.html")
+    prescs = Prescription.objects.all()
+    prods = []
+    for p in prescs:
+        prods.append(p.prods.strip().replace(',', '').split('|'))
+
+    context = {
+        'sales': prescs,
+        'prods': prods
+    }
+    return render(request, "main/sales_history.html", context)
 
 def entries_history(request):
     entries = Entry.objects.all()

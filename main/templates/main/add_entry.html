@@ -35,19 +35,6 @@
             }
         });
 
-        // delete selected
-        $('#remove-btn').click(function () {
-            var sName = table.row('.selected').data()[0];
-            var sDosage = table.row('.selected').data()[1];
-            var sLot = table.row('.selected').data()[3];
-
-            for (var i = 0; i < entry.prods.length; i++) {
-                if (entry.prods[i].name == sName
-                    && entry.prods[i].dosage == sDosage
-                    && entry.prods[i].lot == sLot) {
-                    entry.prods.splice(i, 1);
-                }
-            }
 
             table.row('.selected').remove().draw(false);
         });
@@ -80,12 +67,10 @@
                 tva: $("#product-tva").val(),
                 ht: $("#product-ht").val(),
                 ppa: $("#product-ppa").val(),
-                marge: $("#product-marge").val(),
-                shp: $("#product-shp").val(),
+                marge: $("#product-marge").val()
             };
             entry.prods.push(prod);
             // update table
-
             $("#prods-table tbody").append(`
                 <tr>
                     <td>${prod.name}</td>
@@ -197,17 +182,13 @@
                     <label for="product-tva">TVA</label>
                     <input type="number" step="0.01" class="form-control" id="product-tva">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label for="product-ht">Prix HT</label>
                     <input type="number" step="0.01" class="form-control" id="product-ht">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label for="product-ppa">Prix PPA</label>
                     <input type="number" step="0.01" class="form-control" id="product-ppa">
-                </div>
-                <div class="col-md-2">
-                    <label for="product-shp">SHP</label>
-                    <input type="number" step="0.01" class="form-control" id="product-shp">
                 </div>
                 <div class="col-md-2">
                     <label for="product-marge">Marge</label>
@@ -218,8 +199,6 @@
     </form>
     <button class="btn btn-primary float-right my-3 mx-2" id="add-btn">
         Ajouter Produit</button>
-    <button class="btn btn-danger float-right my-3 mx-2" id="remove-btn">
-        Supprimer Produit</button>
 
     <!-- products table -->
     <div class="container mt-5 mb-5">

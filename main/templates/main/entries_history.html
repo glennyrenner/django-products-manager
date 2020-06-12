@@ -1,27 +1,39 @@
 {% extends 'main/base.html' %}
 {% block content %}
+<script>
+	$(document).ready(function () {
+		$(".details-button").click(function(){
+			var number = $(this).parent().siblings('.number-cell').text();
+			// ajax it over or some shit
+			console.log(number);
+		});
+	});
+</script>
 <div class="container">
 	<h3>Historique des entrées</h3>
 	<table class="table table-striped">
 		<thead>
 			<th>Num d'entrée</th>
+			<th></th>
 			<th>Date d'entrée</th>
 			<th>Num de facture</th>
 		</thead>
 		<tbody>
 			{% for entry in entries %}
-				<tr>
-					<td>{{entry.number}}</td>
-					<td>
-						<a class="details-button" style="cursor: pointer;">
-                            <svg class="bi bi-list" width="2em" height="2em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
-                            </svg>
-                        </a>
-					</td>
-					<td>{{entry.date}}</td>
-					<td>{{entry.bill_number}}</td>
-				</tr>
+			<tr>
+				<td class="number-cell">{{entry.number}}</td>
+				<td>
+					<a class="details-button" style="cursor: pointer;">
+						<svg class="bi bi-list" width="2em" height="2em" viewBox="0 0 16 16" fill="currentColor"
+							xmlns="http://www.w3.org/2000/svg">
+							<path fill-rule="evenodd"
+								d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
+						</svg>
+					</a>
+				</td>
+				<td>{{entry.date}}</td>
+				<td>{{entry.bill_number}}</td>
+			</tr>
 			{% endfor %}
 		</tbody>
 	</table>

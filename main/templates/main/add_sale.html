@@ -20,23 +20,6 @@
             }
         });
 
-        // delete selected
-        $('#remove-btn').click(function () {
-            var sName = table.row('.selected').data()[0];
-            var sDosage = table.row('.selected').data()[1];
-            var sLot = table.row('.selected').data()[3];
-
-            for (var i = 0; i < presc.prods.length; i++) {
-                if (presc.prods[i].name == sName
-                    && presc.prods[i].dosage == sDosage
-                    && presc.prods[i].lot == sLot) {
-                    presc.prods.splice(i, 1);
-                }
-            }
-
-            table.row('.selected').remove().draw(false);
-        });
-
         // auto caps product name and other fields formatting
         $("#product-name").change(function () {
             var name = $(this).val();
@@ -241,8 +224,6 @@
     </form>
     <button class="btn btn-primary float-right my-3 mx-2" id="add-btn">
         Ajouter Produit</button>
-    <button class="btn btn-danger float-right my-3 mx-2" id="remove-btn">
-        Supprimer Produit</button>
 
     <!-- products table -->
     <div class="container mt-5 mb-5">

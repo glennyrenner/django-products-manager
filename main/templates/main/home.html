@@ -85,7 +85,7 @@
                                     if (data.lots[i].qte == 0) {
                                         rowClass = "table-secondary";
                                     }
-                                    else if (!compareDates(data.lots[i].exp_date, today)) {
+                                    else if (!!compareDates(data.lots[i].exp_date, today)) {
                                         rowClass = "table-danger";
                                     }
 
