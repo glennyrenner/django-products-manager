@@ -31,4 +31,5 @@ urlpatterns = [
     path('save_sale/', main_views.save_sale, name='save-sale'),
     path('get_drugs_list/', main_views.get_drugs_list, name='get-drugs-list'),
     path('get-drug-details/', main_views.get_drug_details, name='get-drug-details'),
+    path('close_expiries/', main_views.close_expiries, name='close_expiries'),
 ]

@@ -27,7 +27,7 @@ def home(request):
     close_exps = 0
 
     # make this customizable later
-    warning_date = add_months(datetime.date.today(), 6)
+    warning_date = add_months(datetime.date.today(), 12)
 
     for lot in lots:
         articles += lot.qte
@@ -285,3 +285,14 @@ def entries_history(request):
         'entries': entries
     }
     return render(request, "main/entries_history.html", context)
+
+def close_expiries(request):
+    today = '{}'.format(datetime.date.today()).replace('-', '')
+    next_year = int(today)+10000
+    close = []
+    for lot in Lot.objects.all():
+        date = '{}'.format(lot.exp_date).replace('-', '')
+        if int(date) <= next_year and int(date) > int(today):
+            close.append(lot)
+    print(close)
+    return render(request, 'main/close_expiries.html', {'entries': close})

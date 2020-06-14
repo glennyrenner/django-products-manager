@@ -1,0 +1,25 @@
+{% extends 'main/base.html' %}
+{% block content %}
+<div class='container'>
+    <h2>Dates proche</h2>
+    <small class='text-muted'>Produits qui expireront cette année</small>
+    <table class="table table-striped">
+        <thead>
+            <th>Produit</th>
+            <th>Lot</th>
+            <th>Date Peremp</th>
+            <th>Qte</th>
+            <th>Entree</th>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <td>{{ entry.drug.name }} {{ entry.drug.dosage}}</td>
+            <td>{{ entry.lot_number }}</td>
+            <td>{{ entry.exp_date }}</td>
+            <td>{{ entry.qte }}</td>
+            <td>{{ entry.entry.number }}</td>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
